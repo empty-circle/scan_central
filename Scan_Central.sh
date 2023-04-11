@@ -1,4 +1,5 @@
 #!/bin/bash
+# v1.2
 # empty_circle - 2023
 # Scan_Central is a research tool designed to provide easy access to a variety of script scans.
 
@@ -32,9 +33,19 @@ function http_scan {
     nmap --script "not intrusive and http-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
 }
 
+# Aggressive HTTP Script Execution
+function agg_http_scan {
+    nmap --script "http-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
+}
+
 # MS-SQL Script Execution
 function mssql_scan {
     nmap --script "not intrusive and ms-sql-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
+}
+
+# Aggressive MS-SQL Script Execution
+function agg_mssql_scan {
+    nmap --script "ms-sql-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
 }
 
 # POP3 Script Execution
@@ -42,17 +53,39 @@ function pop3_scan {
     nmap --script "not intrusive and pop3-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
 }
 
+# Aggressive POP3 Script Execution
+function agg_pop3_scan {
+    nmap --script "pop3-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
+}
+
 # sip SCript Execution
 function sip_scan {
     nmap --script "not intrusive and sip-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
 }
+
+# Aggressive SIP Script Execution
+function agg_sip_scan {
+    nmap --script "sip-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
+}
+
 # smb Script
 function smb_scan {
     nmap --script "not intrusive and smb-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
 }
+
+# Aggressive SMB Script Execution
+function agg_smb_scan {
+    nmap --script "smb-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
+}
+
 #ftp script
 function ftp_scan {
     nmap -p 21 --script "not intrusive and ftp-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
+}
+
+# Aggressive FTP Script Execution
+function agg_ftp_scan {
+    nmap -p 21 --script "ftp-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
 }
 
 #ssh
@@ -70,18 +103,13 @@ function ajp_scan {
     nmap --script "not intrusive and ajp-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
 }
 
-#agg ftp script
-function agg_ftp_scan {
-    nmap -p 21 --script "ftp-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-#agg http scan
-function agg_http_scan {
-    nmap --script "http-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
+# Aggressive AJP Script Execution
+function agg_ajp_scan {
+    nmap --script "ajp-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
 }
 
 # Main program
-ffunction main {
+function main {
     mac=$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//')
     echo "Welcome to the scanning tool"
     read -p "Enter the target IP or hostname: " tgt
@@ -112,7 +140,11 @@ ffunction main {
     echo "9) AGG FULL ssh script scan"
     echo "10) AGG FULL ftp scan"
     echo "11) AGG FULL http scan"
-
+    echo "12) AGG FULL mssql scan"
+    echo "13) AGG FULL pop3 scan"
+    echo "14) AGG FULL sip scan"
+    echo "15) AGG FULL smb scan"
+    echo "16) AGG FULL ajp scan"
 
     read -p "Enter selection: " selection
 
@@ -149,6 +181,21 @@ ffunction main {
             ;;
         11)
             agg_http_scan
+            ;;
+        12)
+            agg_mssql_scan
+            ;;
+        13)
+            agg_pop3_scan
+            ;;
+        14)
+            agg_sip_scan
+            ;;
+        15)
+            agg_smb_scan
+            ;;
+        16)
+            agg_ajp_scan
             ;;
         *)
             echo "Invalid selection"
