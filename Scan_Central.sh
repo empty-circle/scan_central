@@ -1,9 +1,9 @@
 #!/bin/bash
-# v1.2
+# v1.5
 # empty_circle - 2023
 # Scan_Central is a research tool designed to provide easy access to a variety of script scans.
 
-# Function to check if a given string is a valid IP address
+# Func to check for valid IP
 function is_valid_ip {
     local ip=$1
     local stat=1
@@ -18,7 +18,7 @@ function is_valid_ip {
     return $stat
 }
 
-# Function to check if a given string is a valid hostname
+# Func check hostname
 function is_valid_hostname {
     local host=$1
     if [[ $host =~ ^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*$ ]]; then
@@ -28,85 +28,22 @@ function is_valid_hostname {
     fi
 }
 
-# HTTP Script Execution
-function http_scan {
-    nmap --script "not intrusive and http-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
+# Base NMAP scan
+function run_scan {
+    local scan_type=$1
+    local aggressive=$2
+    local decoys="49.64.10.11,101.110.64.30,37.98.162.230"
+
+    local script_name
+    if [[ $aggressive == 1 ]]; then
+        script_name="${scan_type}-*"
+    else
+        script_name="not intrusive and ${scan_type}-*"
+    fi
+
+    nmap -Pn -f --source-port 80 -D $decoys -T3 --scan-delay 50ms --max-scan-delay 125ms --script "$script_name" --spoof-mac $mac $tgt -oG $outfile
 }
 
-# Aggressive HTTP Script Execution
-function agg_http_scan {
-    nmap --script "http-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-# MS-SQL Script Execution
-function mssql_scan {
-    nmap --script "not intrusive and ms-sql-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-# Aggressive MS-SQL Script Execution
-function agg_mssql_scan {
-    nmap --script "ms-sql-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-# POP3 Script Execution
-function pop3_scan {
-    nmap --script "not intrusive and pop3-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-# Aggressive POP3 Script Execution
-function agg_pop3_scan {
-    nmap --script "pop3-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-# sip SCript Execution
-function sip_scan {
-    nmap --script "not intrusive and sip-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-# Aggressive SIP Script Execution
-function agg_sip_scan {
-    nmap --script "sip-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-# smb Script
-function smb_scan {
-    nmap --script "not intrusive and smb-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-# Aggressive SMB Script Execution
-function agg_smb_scan {
-    nmap --script "smb-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-#ftp script
-function ftp_scan {
-    nmap -p 21 --script "not intrusive and ftp-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-# Aggressive FTP Script Execution
-function agg_ftp_scan {
-    nmap -p 21 --script "ftp-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-#ssh
-function ssh_scan {
-    nmap -p 22 --script "not intrusive and ssh-*" --script-args 'ssh.usernames={"root", "user"}, publickeys={"./id_rsa1.pub", "./id_rsa2.pub"}' --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-#aggressive SSH scan
-function agg_ssh_scan {
-    nmap -p 22 --script "ssh*" --script-args 'ssh.usernames={"root", "user"}, publickeys={"./id_rsa1.pub", "./id_rsa2.pub"}' --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-#apj
-function ajp_scan {
-    nmap --script "not intrusive and ajp-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
-
-# Aggressive AJP Script Execution
-function agg_ajp_scan {
-    nmap --script "ajp-*" --source-port 53 --spoof-mac $mac -T4 $tgt -oG $outfile
-}
 
 # Main program
 function main {
@@ -128,81 +65,28 @@ function main {
         exit 1
     fi
 
+    scan_types=("http" "mssql" "pop3" "smb" "ftp" "sip" "ssh" "ajp")
+    selection_index=1
+
     echo "Select a scan to run:"
-    echo "1) FULL http script scan"
-    echo "2) FULL mssql script scan"
-    echo "3) FULL pop3 script scan"
-    echo "4) FULL smb script scan"
-    echo "5) FULL ftp script scan"
-    echo "6) FULL sip script scan"
-    echo "7) FULL ssh script scan"
-    echo "8) FULL ajp script scan"
-    echo "9) AGG FULL ssh script scan"
-    echo "10) AGG FULL ftp scan"
-    echo "11) AGG FULL http scan"
-    echo "12) AGG FULL mssql scan"
-    echo "13) AGG FULL pop3 scan"
-    echo "14) AGG FULL sip scan"
-    echo "15) AGG FULL smb scan"
-    echo "16) AGG FULL ajp scan"
+    for scan_type in "${scan_types[@]}"; do
+        echo "$selection_index) FULL ${scan_type} script scan (Safe)"
+        echo "$((selection_index + 1))) FULL ${scan_type} script scan (Aggressive)"
+        selection_index=$((selection_index + 2))
+    done
 
     read -p "Enter selection: " selection
 
-    case $selection in
-        1)
-            http_scan
-            ;;
-        2)
-            mssql_scan
-            ;;
-        3)
-            pop3_scan
-            ;;
-        4)
-            smb_scan
-            ;;
-        5)
-            ftp_scan
-            ;;
-        6)
-            sip_scan
-            ;;
-        7)
-            ssh_scan
-            ;;
-        8)
-            ajp_scan
-            ;;
-        9)
-            agg_ssh_scan
-            ;;
-        10)
-            agg_ftp_scan
-            ;;
-        11)
-            agg_http_scan
-            ;;
-        12)
-            agg_mssql_scan
-            ;;
-        13)
-            agg_pop3_scan
-            ;;
-        14)
-            agg_sip_scan
-            ;;
-        15)
-            agg_smb_scan
-            ;;
-        16)
-            agg_ajp_scan
-            ;;
-        *)
-            echo "Invalid selection"
-            exit 1
-            ;;
-    esac
+    if [[ $selection -lt 1 || $selection -gt $((selection_index - 1)) ]]; then
+        echo "Invalid selection"
+        exit 1
+    fi
+
+    scan_index=$(((selection - 1) / 2))
+    aggressive=$((selection % 2))
+
+    run_scan "${scan_types[$scan_index]}" "$aggressive"
 }
 
-# Call the main function to start the program
+# Call the main to start
 main
